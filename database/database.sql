@@ -1,0 +1,27 @@
+CREATE DATABASE IF NOT EXISTS backend_laravel;
+
+use backend_laravel;
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    surname VARCHAR(200) NOT NULL,
+    nick VARCHAR(50) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    avatar VARCHAR(255) DEFAULT "default.png",
+    bio TEXT,
+    password VARCHAR(100) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE articles(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(150) NOT NULL,
+    content TEXT NOT NULL,
+    user_id INT,
+    image VARCHAR(255) DEFAULT "default.png",
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
