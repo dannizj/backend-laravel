@@ -65,7 +65,31 @@ class JwtAuth{
     }
     
     // Verificar la validez de un token
-    
+    public function checkToken($jwt, $getIdentity = false){
+        $auth = false;
+        $decoded = false;
+
+        try{
+            // Intentar decodificar el token
+            $decoded = JWT::decode($jwt, new Key($this->key, "HS256"));
+        }catch(\UnexpectedValueException $e){
+            $auth = false;
+        }catch(\DomainException $e){
+            $auth = false;
+        }
+
+        if($decoded && !empty($decoded) && is_object($decoded) && isset($decoded->sub)){
+            $auth = true;
+        }else{
+            $auth = false;
+        }
+
+        if($getIdentity){
+            return $decoded;
+        }
+
+        return $auth;
+    }
 
     
 }

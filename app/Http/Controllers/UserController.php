@@ -79,72 +79,80 @@ class UserController extends Controller
 
     public function login(Request $request){
 
-    // Crear una instancia de JWT
-    $jwtAuth = new JwtAuth();
+        // Crear una instancia de JWT
+        $jwtAuth = new JwtAuth();
 
-    // Recoger los datos del usuario
-    $email = $request->input("email", null);
-    $password = $request->input("password", null);
-    $getUser =$request->input("getUser", null);
+        // Recoger los datos del usuario
+        $email = $request->input("email", null);
+        $password = $request->input("password", null);
+        $getUser =$request->input("getUser", null);
 
-    // Esos datos los meto en un array
-    $user = [
-        "email" => $email,
-        "password" => $password
-    ];
+        // Esos datos los meto en un array
+        $user = [
+            "email" => $email,
+            "password" => $password
+        ];
 
-    // Validar los datos
-    $validator = Validator::make($user, [
-        "email" => "required|email",
-        "password" => "required"
-    ]);
+        // Validar los datos
+        $validator = Validator::make($user, [
+            "email" => "required|email",
+            "password" => "required"
+        ]);
 
-    // Comprobar validacion
-    if($validator->fails()){
-        // di no es valida dar una respuesta
-        
-        return response()->json([
-                "status" => "error",
-                "message" => "Los datos no se han validado correctamente",
-                "error" => $validator->errors()
-            ]);
-
-    }else{
-        // Buscar al usuario en la bd para ver si existe
-        $user = User::where([
-            "email" => $email
-        ])->first();
-
-        // Verificar si las contraseñas es correcta
-        $pwdVerify = password_verify($password, $user->password);
-
-        // Comprobar si se ha pasado la verificacion
-        if($pwdVerify){
+        // Comprobar validacion
+        if($validator->fails()){
+            // di no es valida dar una respuesta
             
-
-            // Devolver respuesta positiva
-            if(is_null($getUser)){
-                return $jwtAuth->auth($user);
-            }else{
-                return $jwtAuth->auth($user, true);
-            }
-
-            
-
-        }else{
-            // Devolver respuesta negativa
             return response()->json([
                     "status" => "error",
-                    "message" => "Login Incorrecto"
+                    "message" => "Los datos no se han validado correctamente",
+                    "error" => $validator->errors()
                 ]);
 
-            };
-        }
+        }else{
+            // Buscar al usuario en la bd para ver si existe
+            $user = User::where([
+                "email" => $email
+            ])->first();
+
+            // Verificar si las contraseñas es correcta
+            $pwdVerify = password_verify($password, $user->password);
+
+            // Comprobar si se ha pasado la verificacion
+            if($pwdVerify){
+                
+
+                // Devolver respuesta positiva
+                if(is_null($getUser)){
+                    return $jwtAuth->auth($user);
+                }else{
+                    return $jwtAuth->auth($user, true);
+                }
+
+                
+
+            }else{
+                // Devolver respuesta negativa
+                return response()->json([
+                        "status" => "error",
+                        "message" => "Login Incorrecto"
+                    ]);
+
+                };
+            }
 
 
+            
         
-    
     }
 
+    public function update(Request $request){
+
+        return response()->json([
+            "status" => "success",
+            "message" => "Metodo update de datos para usuario",
+            "user" => $request->user
+        ]);
+    }
     
 }
