@@ -232,5 +232,93 @@ class UserController extends Controller
         return response()->json($data);
 
     }
+
+    public function upload(Request $request){
+
+        // Sacar la imagen enviada por el cliente
+        $image = $request->file("file0");
+
+        // Sacar los datos del usuario autenticado
+        $identity = $request->user;
+
+        // Validar archivo
+        $validator = Validator::make($request->all(), [
+            "file0" => "required|image|mimes:jpg,jpeg,gif,png"
+        ]);
+
+        // Comprobar que la validacion es buena
+        if($image && empty($validator->fails())){
+            // Generar un nombre para el archivo
+            $image_name = time() . $image->getClientOriginalName(); 
+
+            // Guardar la imagen en el disco
+            \Storage::disk("avatars")->put($image_name, \File::get($image));
+
+            // Buscar el usuario por su id
+            $user = User::find($identity->sub);
+
+            // Si ya tiene avatar borrarlo
+            if($user && $user->avatar && \Storage::disk("avatars")->exists($user->avatar)){
+                \Storage::disk("avatars")->delete($user->avatar);
+            }
+
+            // Actualizar el avatar del usuario
+            if($user){
+                $user->avatar = $image_name;
+                $user->save();
+
+                $data = [
+                    "status" => "success",
+                    "message" => "Imagen subida correctamente",
+                    "user" => $user
+                ];
+            }else{
+
+                $data = [
+                    "status" => "error",
+                    "message" => "Usuario no encontrado"
+                ];
+            }
+
+
+            // // Devolver respuesta
+            // $data = [
+            //     "status" => "success",
+            //     "message" => "Imagen subida correctamente",
+            //     "user" => $user
+            // ];
+
+
+        }else{
+            $data = [
+                "status" => "error",
+                "message" => $validator->errors()
+            ];
+        }
+
+            
+
+       
+
+        return response()->json($data);
+
+
+    }
+
+    public function avatar($file){
+        $disk = \Storage::disk("avatars");
+
+        if($disk->exists($file)){
+            $path = $disk->path($file);
+
+            return response()->file($path);
+        }else{
+            return response()->json([
+                "status" => "error",
+                "message" => "Imagen no encontrada"
+            ]);
+        }
+
+    }
     
 }
