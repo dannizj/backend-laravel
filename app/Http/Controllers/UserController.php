@@ -148,11 +148,68 @@ class UserController extends Controller
 
     public function update(Request $request){
 
-        return response()->json([
-            "status" => "success",
-            "message" => "Metodo update de datos para usuario",
-            "user" => $request->user
+        // Obtener los datos del usuario autenticado
+        $identity = $request->user;
+
+        // Recoger los datos de la peticion
+        $name = $request->input("name", $identity->name);
+        $surname = $request->input("surname", $identity->surname);
+        $email = $request->input("email", $identity->email);
+        $nick = $request->input("nick", $identity->nick);
+        $bio = $request->input("bio", $identity->bio);
+
+        // Array para validar
+        $userToUpdate = [
+            "name" => $name,
+            "surname" => $surname,
+            "email" => $email,
+            "nick" => $nick,
+            "bio" => $bio
+        ];
+
+        // Recoger contraseña en caso de que se envie
+        $password = $request->input("password", null);
+
+        // Cifrar la contraseña si fue enviada
+        if(!is_null($password)){
+            $pwd = password_hash($password, PASSWORD_BCRYPT, ["cost" => 5]);
+            $userToUpdate["password"] = $pwd;
+        }
+
+        // Validar los datos
+        $validator = Validator::make($userToUpdate, [
+            "name" => "required|alpha",
+            "surname" => "required|alpha",
+            "email" => "required|email|unique:users,email,".$identity->sub,
+            "nick" => "required|unique:users,nick,".$identity->sub
         ]);
+
+        // Comprobar la validacion
+        if($validator->fails()){
+            $data = [
+                "status" => "error",
+                "message" => "Los datos no se han validado correctamente",
+                "error" => $validator->errors()
+            ];
+
+        }else{
+            // Actualizar los datos del usuario
+            $userUpdate = User::where("id", $identity->sub)->update($userToUpdate);
+
+            // Sacar el password antes de devolver
+            unset($userToUpdate['password']);
+
+            $data = [
+                "status" => "success",
+                "user" => $userToUpdate
+            ];
+        }
+
+
+
+        // Devolver una respuesta
+
+        return response()->json($data);
     }
     
 }
