@@ -211,5 +211,26 @@ class UserController extends Controller
 
         return response()->json($data);
     }
+
+    public function profile(Request $request, $id){
+
+        $user = User::where("id", $id)->first();
+        
+        if(!$user){
+            $data = [
+                "status" => "error",
+                "message" => "Usuario no encontrado"
+            ];
+        }else{
+            $user->makeHidden(["password", "updated_at"]);
+            $data = [
+                "status" => "success",
+                "user" => $user
+            ];
+        }
+
+        return response()->json($data);
+
+    }
     
 }

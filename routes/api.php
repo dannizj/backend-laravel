@@ -7,6 +7,7 @@ use App\Http\Middleware\JwtMiddleware;
 
 Route::post("/user/register", [UserController::class, "register"]);
 Route::post("/user/login", [UserController::class, "login"]);
+Route::get("/user/profile/{id}", [UserController::class, "profile"]);
 
 Route::middleware([JwtMiddleware::class])->group(function() {
     
