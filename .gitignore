@@ -34,3 +34,4 @@ boost.json
 
 # Imágenes subidas por usuarios
 /storage/app/avatars/
+/storage/app/posters/

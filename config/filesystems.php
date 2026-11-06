@@ -69,6 +69,15 @@ return [
             'report' => false,
         ],
 
+        'posters' => [
+            'driver' => 'local',
+            'root' => storage_path('app/posters'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

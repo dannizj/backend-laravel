@@ -21,4 +21,12 @@ class User extends Model
         "created_at",
         "updated_at"
     ];
+
+    // Especificar campos que NO quiero que se muestren
+    protected $hidden = [
+        "password",
+        "remember_token",
+        "updated_at"
+        
+    ];
 }
