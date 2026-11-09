@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Article;
 use Illuminate\Support\Facades\Validator;
+use OpenAI;
 
-use App\Helpers\JwtAuth;
+//use App\Helpers\JwtAuth;
 
 class ArticleController extends Controller{
 
@@ -168,13 +169,21 @@ class ArticleController extends Controller{
         $article = Article::find($id);
 
         if(!empty($article)){
-            
-            $data = [
-                "status" => "success",
-                "article" => $article
-            ];
-            
-            $article->delete();
+
+            if($article->user_id !== $request->user->sub){
+                $data = [
+                    "status" => "error",
+                    "message" => "No tienes el permiso para elimiarlo"
+                ];
+            }else{
+
+                $data = [
+                    "status" => "success",
+                    "article" => $article
+                ];
+                
+                $article->delete();
+            }
 
         }else{
 
@@ -218,13 +227,24 @@ class ArticleController extends Controller{
 
         }else{
 
-            $articleUpdate = $article->update($articleToUpdate);
+            if($article->user_id !== $request->user->sub){
+                $data = [
+                    "status" => "error",
+                    "message" => "No tienes el permiso para elimiarlo"
+                ];
+            }else{
+                
+                $articleUpdate = $article->update($articleToUpdate);
 
-            $data = [
-                "status" => "success",
-                "update" => $articleUpdate,
-                "article" => $articleToUpdate
-            ];            
+                $data = [
+                    "status" => "success",
+                    "update" => $articleUpdate,
+                    "article" => $articleToUpdate
+                ];      
+
+            }
+
+                 
         }       
 
         return response()->json($data);
@@ -292,5 +312,100 @@ class ArticleController extends Controller{
             ]);
         }
     }
+
+    public function generate(Request $request, $theme){
+        // Inicializar el cliente de openAI
+        $client = OpenAI::client(env("OPENAI_API_KEY"));
+
+        // Definir el prompt
+        $promptSystem = "
+            Eres un redacto especializado en {$theme}. 
+
+            El Usuario te va a pedir que redactes un articulo (titulo y texto para el contenido).
+            
+            Solo puedes responder con un articulo adecuado al tema que te pida el usuario,
+            cualquier otra conversacion o respusta esta prohibida.
+
+            El formato de salida del articulo deber ser el siguiente (JSON):
+                {
+                    \"title\": \"AQUI EL TITULO\"
+                    \"content\": \"AQUI EL CONTENIDO\"
+                }
+            
+            El titulo deber tener maximo 120 caracteres.
+            El contenido deber tener maximo 1000 caracteres.
+        ";
+
+        $promptUser = "Necesuto que redactes un articulo de {$theme}";
+
+        try {
+            // Llamar al api de openai
+            $response = $client->chat()->create([
+                "model" => "gpt-4o-mini",
+                "messages" => [
+                    ["role" => "system", "content" => $promptSystem],
+                    ["role" => "user", "content" => $promptUser]
+                ],
+                "max_tokens" => 700,
+                "response_format" => ["type" => "json_object"]
+            ]);
+
+            // Extraer el contenido del articulo
+            $articleObject = json_decode($response->choices[0]->message->content, true);
+
+            // Validar articulo
+            $validator = Validator::make($articleObject, [
+                "title" => "required|string|max:120",
+                "content" => "required|string"
+            ]);
+
+            if($validator->fails()){
+                $data = [
+                    "status" => "error",
+                    "message" => "Error al validar el articulo",
+                    "error" => $validator->errors()
+                ];
+            }
+
+            // ID Del usuario autenticado
+            $identity = $request->user;
+            $userId = $identity->sub;
+
+            // Agregar el user_id al objeto del articulo
+            $articleObject["user_id"] = $userId;
+
+            // Crear y guardar el articulo
+            $article = Article::create($articleObject);
+
+            if(!$article){
+                $data = [
+                    "status" => "error",
+                    "message" => "Error al guardar el articulo" 
+                ];
+            }else{
+                // Devolder resultado
+                $data = [
+                    "status" => "success",
+                    "article" => $articleObject
+                ];
+
+            }
+
+            
+
+
+        } catch (\Exception $e) {
+            $data = [
+                "status" => "error",
+                "message" => "Error al generar el articulo",
+                "error" => $e->getMessage()
+            ];
+        }
+
+      
+        return response()->json($data);
+
+    }
+
 
 }

@@ -101,8 +101,8 @@ class UserController extends Controller
 
         // Comprobar validacion
         if($validator->fails()){
-            // di no es valida dar una respuesta
             
+            // Si no es valida dar una respuesta
             return response()->json([
                     "status" => "error",
                     "message" => "Los datos no se han validado correctamente",
@@ -280,15 +280,6 @@ class UserController extends Controller
                 ];
             }
 
-
-            // // Devolver respuesta
-            // $data = [
-            //     "status" => "success",
-            //     "message" => "Imagen subida correctamente",
-            //     "user" => $user
-            // ];
-
-
         }else{
             $data = [
                 "status" => "error",
@@ -296,12 +287,7 @@ class UserController extends Controller
             ];
         }
 
-            
-
-       
-
         return response()->json($data);
-
 
     }
 

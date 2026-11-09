@@ -33,6 +33,7 @@ Route::middleware([JwtMiddleware::class])->group(function() {
     Route::post("/article/save", [ArticleController::class, "save"]);    
     Route::delete("/article/delete/{id}", [ArticleController::class, "delete"]);
     Route::put("/article/update/{id}", [ArticleController::class, "update"]);    
-    Route::post("/article/upload/{id}", [ArticleController::class, "upload"]);  
+    Route::post("/article/upload/{id}", [ArticleController::class, "upload"]);    
+    Route::post("/article/generate/{theme}", [ArticleController::class, "generate"]);  
 
 });
